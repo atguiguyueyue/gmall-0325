@@ -76,7 +76,7 @@ public class Controller {
             todayMap = publisherService.getSelectGmvHour(date);
             //1.2获取昨天的数据
             yesterdayMap = publisherService.getSelectGmvHour(yesterday);
-        }else {
+        }else if("dau".equals(id)){
             //获取日活的分时数据
             //1.1获取今天的数据
             todayMap = publisherService.getSelectDauHour(date);
