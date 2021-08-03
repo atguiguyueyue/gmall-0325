@@ -109,6 +109,6 @@ public class Read_WithCode {
 
 
         //关闭连接
-        jestClient.shutdownClient();
+        jestClient .shutdownClient();
     }
 }
