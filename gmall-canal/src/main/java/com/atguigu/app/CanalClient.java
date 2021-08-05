@@ -103,11 +103,11 @@ public class CanalClient {
             System.out.println(jsonObject.toString());
             //5.发送数据到kafka
             //模拟网络震荡
-            try {
-                Thread.sleep(new Random().nextInt(5)*1000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(new Random().nextInt(5)*1000L);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
             MyKafkaSender.send(kafkaTopicOrder, jsonObject.toString());
         }
     }

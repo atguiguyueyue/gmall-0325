@@ -1,5 +1,6 @@
 package com.atguigu.gmallpublisher.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmallpublisher.service.PublisherService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,8 +68,8 @@ public class Controller {
         //1.获取service返回的数据
         String yesterday = LocalDate.parse(date).plusDays(-1).toString();
 
-        Map todayMap=null;
-        Map yesterdayMap=null;
+        Map todayMap = null;
+        Map yesterdayMap = null;
 
         //根据id来判断获取的是谁的数据
         if ("order_amount".equals(id)) {
@@ -76,7 +78,7 @@ public class Controller {
             todayMap = publisherService.getSelectGmvHour(date);
             //1.2获取昨天的数据
             yesterdayMap = publisherService.getSelectGmvHour(yesterday);
-        }else if("dau".equals(id)){
+        } else if ("dau".equals(id)) {
             //获取日活的分时数据
             //1.1获取今天的数据
             todayMap = publisherService.getSelectDauHour(date);
@@ -93,5 +95,13 @@ public class Controller {
         return JSONObject.toJSONString(result);
     }
 
-
+    @RequestMapping("sale_detail")
+    public String getSaleDetail(
+            @RequestParam("date") String date,
+            @RequestParam("startpage") Integer start,
+            @RequestParam("size") Integer size,
+            @RequestParam("keyword") String keyWord
+    ) throws IOException {
+        return JSON.toJSONString(publisherService.getSaleDetail(date, start, size, keyWord));
+    }
 }

@@ -1,5 +1,6 @@
 package com.atguigu.gmallpublisher.service;
 
+import java.io.IOException;
 import java.util.Map;
 
 public interface PublisherService {
@@ -14,4 +15,7 @@ public interface PublisherService {
 
     //获取GMV分时数据的抽象方法
     public Map getSelectGmvHour(String date);
+
+    //获取并解析ES中数据的抽象方法
+    public Map getSaleDetail(String date, Integer start, Integer size, String keyWord) throws IOException;
 }

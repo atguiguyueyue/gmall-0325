@@ -3,15 +3,16 @@ package com.atguigu.app
 import java.util
 
 import com.alibaba.fastjson.JSON
-import com.atguigu.bean.{OrderDetail, OrderInfo, SaleDetail}
+import com.atguigu.bean.{OrderDetail, OrderInfo, SaleDetail, UserInfo}
 import com.atguigu.constants.GmallConstants
-import com.atguigu.utils.MyKafkaUtil
+import com.atguigu.utils.{MyEsUtil, MyKafkaUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import redis.clients.jedis.Jedis
 import org.json4s.native.Serialization
+
 import collection.JavaConverters._
 object SaleDetailApp {
   def main(args: Array[String]): Unit = {
@@ -123,7 +124,36 @@ object SaleDetailApp {
       //将集合转为迭代器返回
       details.asScala.toIterator
     })
-    noUserSaleDetailDStream.print()
+//    noUserSaleDetailDStream.print()
+
+
+    //7.查询userInfo缓存补全用户数据
+    val saleDetailDStream: DStream[SaleDetail] = noUserSaleDetailDStream.mapPartitions(partition => {
+      val jedis: Jedis = new Jedis("hadoop102", 6379)
+      val details: Iterator[SaleDetail] = partition.map(saleDetail => {
+        //根据UserInfo的redisKey查询userInfo数据
+        val userInfoRedisKey: String = "UserInfo:" + saleDetail.user_id
+        //获取userInfoJson字符串数据
+        val userInfoJsonStr: String = jedis.get(userInfoRedisKey)
+        //将json串转为样例类
+        val userInfo: UserInfo = JSON.parseObject(userInfoJsonStr, classOf[UserInfo])
+        saleDetail.mergeUserInfo(userInfo)
+        saleDetail
+      })
+      jedis.close()
+      details
+    })
+    saleDetailDStream.print()
+
+    //8.将SaleDetail数据保存至ES
+    saleDetailDStream.foreachRDD(rdd=>{
+      rdd.foreachPartition(partition=>{
+        val list: List[(String, SaleDetail)] = partition.toList.map(saleDetail => {
+          (saleDetail.order_detail_id, saleDetail)
+        })
+        MyEsUtil.insertBulk(GmallConstants.DETAIL_INDEX_NAME_PREFIXES+"0325",list)
+      })
+    })
 
     ssc.start()
     ssc.awaitTermination()
